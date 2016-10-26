@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -23,8 +24,11 @@ type killingMeSoftly struct {
 var (
 	once         sync.Once
 	killMeSoftly *killingMeSoftly
-	notify       chan struct{}
-	done         chan struct{}
+	// notify       chan struct{}
+	// done         chan struct{}
+	notify   atomic.Value // chan struct{}
+	done     atomic.Value // chan struct{}
+	exitFunc atomic.Value // os.Exit
 )
 
 func init() {
@@ -33,8 +37,11 @@ func init() {
 			wg: &sync.WaitGroup{},
 		}
 
-		notify = make(chan struct{})
-		done = make(chan struct{})
+		notify.Store(make(chan struct{}))
+		done.Store(make(chan struct{}))
+		exitFunc.Store(os.Exit)
+		// notify = make(chan struct{})
+		// done = make(chan struct{})
 	})
 }
 
@@ -43,14 +50,14 @@ func init() {
 //
 // usefull when other code, such as a custom TCP connection listener needs to be
 // notified to stop listening for new connections.
-func ShutdownInitiated() chan struct{} {
-	return notify
+func ShutdownInitiated() <-chan struct{} {
+	return notify.Load().(chan struct{})
 }
 
 // ShutdownComplete returns a notification channel for the package which will be
 // closed/notified once termination is imminent.
-func ShutdownComplete() chan struct{} {
-	return done
+func ShutdownComplete() <-chan struct{} {
+	return done.Load().(chan struct{})
 }
 
 // Wait signifies that your application is busy performing an operation.
@@ -81,20 +88,28 @@ func Listen(block bool) {
 
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	done := done.Load().(chan struct{})
+	notify := notify.Load().(chan struct{})
+	exit := exitFunc.Load().(func(int))
 
 	go func() {
+
+		defer close(s)
+		defer signal.Stop(s)
+
 		sig := <-s
 
 		close(notify)
+
+		log.Printf("signal %s recieved, attempting soft shutdown...\n", sig)
 
 		// listen for another signal, if another happens.. force shutdown
 		go func() {
 			sig := <-s
 			fmt.Printf("recieved additional %s, hard shutdown initiated\n", sig)
-			os.Exit(1)
+			exit(1)
 		}()
 
-		log.Printf("signal %s recieved, attempting soft shutdown...\n", sig)
 		killMeSoftly.wg.Wait()
 		log.Println("soft shutdown complete, ending process")
 		close(done)
@@ -114,23 +129,28 @@ func ListenTimeout(block bool, wait time.Duration) {
 
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	done := done.Load().(chan struct{})
+	notify := notify.Load().(chan struct{})
+	exit := exitFunc.Load().(func(int))
 
 	go func() {
+		defer close(s)
+		defer signal.Stop(s)
 		sig := <-s
 
 		close(notify)
 
-		log.Printf("signal %s recieved, attempting soft shutdown after %s...\n", sig, wait)
+		log.Printf("signal %s recieved, attempting soft shutdown for %s...\n", sig, wait)
 
 		go func() {
 			select {
 
 			case <-time.After(wait):
 				fmt.Println("timeout reached, hard shutdown initiated")
-				os.Exit(1)
+				exit(1)
 			case sig := <-s:
 				fmt.Printf("recieved additional %s, hard shutdown initiated\n", sig)
-				os.Exit(1)
+				exit(1)
 			case <-done:
 			}
 
