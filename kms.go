@@ -24,11 +24,9 @@ type killingMeSoftly struct {
 var (
 	once         sync.Once
 	killMeSoftly *killingMeSoftly
-	// notify       chan struct{}
-	// done         chan struct{}
-	notify   atomic.Value // chan struct{}
-	done     atomic.Value // chan struct{}
-	exitFunc atomic.Value // os.Exit
+	notify       atomic.Value // chan struct{}
+	done         atomic.Value // chan struct{}
+	exitFunc     atomic.Value // os.Exit aka func(int)
 )
 
 func init() {
@@ -40,8 +38,6 @@ func init() {
 		notify.Store(make(chan struct{}))
 		done.Store(make(chan struct{}))
 		exitFunc.Store(os.Exit)
-		// notify = make(chan struct{})
-		// done = make(chan struct{})
 	})
 }
 

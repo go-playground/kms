@@ -26,8 +26,6 @@ import (
 func reinitialize() {
 	notify.Store(make(chan struct{}))
 	done.Store(make(chan struct{}))
-	// notify = make(chan struct{})
-	// done = make(chan struct{})
 }
 
 func TestMain(m *testing.M) {
