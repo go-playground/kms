@@ -80,7 +80,7 @@ func (k *killingMeSoftly) Done() {
 func Listen(block bool) {
 
 	s := make(chan os.Signal, 1)
-	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	go func() {
 		sig := <-s
@@ -113,7 +113,7 @@ func Listen(block bool) {
 func ListenTimeout(block bool, wait time.Duration) {
 
 	s := make(chan os.Signal, 1)
-	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	go func() {
 		sig := <-s
