@@ -47,9 +47,9 @@ func init() {
 
 // AllowSignalHardShutdown allows you to set whether the application
 // should allow hard shutdown of the application if two signals for shutdown
-// should shut down hard. eg. user running application from the command line types
-// CTRL + C, the application begins to shut down gracefully, if the user types
-// another CTRL + C should the application shut down hard?
+// should cause a hard shutdown. eg. user running application from the command
+// line types CTRL + C, the application begins to shut down gracefully, if the
+// user types another CTRL + C should the application shut down hard?
 //
 // Default: true
 func AllowSignalHardShutdown(allow bool) {
