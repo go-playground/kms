@@ -244,7 +244,6 @@ func TestListenTimeoutDoneNoHardShutdown(t *testing.T) {
 
 	exitFunc.Store(func(code int) {
 		fmt.Println("Exiting OK")
-		close(done.Load().(chan struct{}))
 	})
 
 	m := sync.Mutex{}
