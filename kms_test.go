@@ -223,7 +223,7 @@ func TestListenTimeoutDone(t *testing.T) {
 		syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
 	}()
 
-	ListenTimeout(true, time.Second*2)
+	ListenTimeout(true, time.Second*10)
 
 	m.Lock()
 	defer m.Unlock()
@@ -276,7 +276,8 @@ func TestListenTimeoutDoubleKill(t *testing.T) {
 		t.Errorf("Expected '%t' Got '%t'", true, stopping)
 	}
 
-	if !stopped {
-		t.Errorf("Expected '%t' Got '%t'", true, stopped)
-	}
+	// no guarantee stopped will or will not get set, it is a hard shutdown
+	// if !stopped {
+	// 	t.Errorf("Expected '%t' Got '%t'", true, stopped)
+	// }
 }
