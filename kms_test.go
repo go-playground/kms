@@ -26,13 +26,15 @@ import (
 func reinitialize() {
 	notify.Store(make(chan struct{}))
 	done.Store(make(chan struct{}))
-}
 
-func TestMain(m *testing.M) {
+	AllowSignalHardShutdown(true)
 
 	exitFunc.Store(func(code int) {
 		fmt.Println("Exiting")
 	})
+}
+
+func TestMain(m *testing.M) {
 
 	os.Exit(m.Run())
 }
@@ -153,6 +155,7 @@ func TestListenTimeout(t *testing.T) {
 func TestListenTimeoutTimeout(t *testing.T) {
 
 	reinitialize()
+	AllowSignalHardShutdown(false)
 
 	exitFunc.Store(func(code int) {
 		fmt.Println("Exiting OK")

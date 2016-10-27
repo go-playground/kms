@@ -24,9 +24,12 @@ type killingMeSoftly struct {
 var (
 	once         sync.Once
 	killMeSoftly *killingMeSoftly
+
+	// note only atomic.Value for tests especially "go test -race"
 	notify       atomic.Value // chan struct{}
 	done         atomic.Value // chan struct{}
 	exitFunc     atomic.Value // os.Exit aka func(int)
+	hardShutdown atomic.Value // bool
 )
 
 func init() {
@@ -38,7 +41,19 @@ func init() {
 		notify.Store(make(chan struct{}))
 		done.Store(make(chan struct{}))
 		exitFunc.Store(os.Exit)
+		hardShutdown.Store(true)
 	})
+}
+
+// AllowSignalHardShutdown allows you to set whether the application
+// should allow hard shutdown of the application if two signals for shutdown
+// should shut down hard. eg. user running application from the command line types
+// CTRL + C, the application begins to shut down gracefully, if the user types
+// another CTRL + C should the application shut down hard?
+//
+// Default: true
+func AllowSignalHardShutdown(allow bool) {
+	hardShutdown.Store(allow)
 }
 
 // ShutdownInitiated returns a notification channel for the package which will be
@@ -99,12 +114,14 @@ func Listen(block bool) {
 
 		log.Printf("signal %s recieved, attempting soft shutdown...\n", sig)
 
-		// listen for another signal, if another happens.. force shutdown
-		go func() {
-			sig := <-s
-			fmt.Printf("recieved additional %s, hard shutdown initiated\n", sig)
-			exit(1)
-		}()
+		if hardShutdown.Load().(bool) {
+			// listen for another signal, if another happens.. force shutdown
+			go func() {
+				sig := <-s
+				fmt.Printf("recieved additional %s, hard shutdown initiated\n", sig)
+				exit(1)
+			}()
+		}
 
 		killMeSoftly.wg.Wait()
 		log.Println("soft shutdown complete, ending process")
@@ -138,19 +155,32 @@ func ListenTimeout(block bool, wait time.Duration) {
 
 		log.Printf("signal %s recieved, attempting soft shutdown for %s...\n", sig, wait)
 
-		go func() {
-			select {
+		if hardShutdown.Load().(bool) {
+			go func() {
+				select {
 
-			case <-time.After(wait):
-				fmt.Println("timeout reached, hard shutdown initiated")
-				exit(1)
-			case sig := <-s:
-				fmt.Printf("recieved additional %s, hard shutdown initiated\n", sig)
-				exit(1)
-			case <-done:
-			}
+				case <-time.After(wait):
+					fmt.Println("timeout reached, hard shutdown initiated")
+					exit(1)
+				case sig := <-s:
+					fmt.Printf("recieved additional %s, hard shutdown initiated\n", sig)
+					exit(1)
+				case <-done:
+				}
 
-		}()
+			}()
+		} else {
+			go func() {
+				select {
+
+				case <-time.After(wait):
+					fmt.Println("timeout reached, hard shutdown initiated")
+					exit(1)
+				case <-done:
+				}
+
+			}()
+		}
 
 		killMeSoftly.wg.Wait()
 		log.Println("soft shutdown complete, ending process")

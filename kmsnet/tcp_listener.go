@@ -103,7 +103,8 @@ type zeroTCPConn struct {
 }
 
 func (conn zeroTCPConn) Close() (err error) {
-	err = conn.TCPConn.Close()
-	kms.Done()
+	if err = conn.TCPConn.Close(); err == nil {
+		kms.Done()
+	}
 	return
 }

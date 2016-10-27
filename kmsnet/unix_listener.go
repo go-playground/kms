@@ -99,7 +99,8 @@ type zeroUinxConn struct {
 
 func (conn zeroUinxConn) Close() (err error) {
 
-	err = conn.Conn.Close()
-	kms.Done()
+	if err = conn.Conn.Close(); err == nil {
+		kms.Done()
+	}
 	return
 }
