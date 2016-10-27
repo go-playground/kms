@@ -34,7 +34,7 @@ func NewUnixListener(net, laddr string) (stdnet.Listener, error) {
 
 // NewUnixListenerNoShutdown returns an instance of a net.Listener that
 // is pre-wired with kms, but no shutdown signals allowing for a custom
-// shutdown to be implimented by the caller.
+// shutdown to be implemented by the caller.
 func NewUnixListenerNoShutdown(net, laddr string) (stdnet.Listener, error) {
 
 	unixAddr, err := stdnet.ResolveUnixAddr(net, laddr)
@@ -52,7 +52,7 @@ func NewUnixListenerNoShutdown(net, laddr string) (stdnet.Listener, error) {
 
 // NewUnixNoShutdown returns an instance of a net.Listener that
 // is pre-wired with kms, but no shutdown signals allowing for a custom
-// shutdown to be implimented by the caller.
+// shutdown to be implemented by the caller.
 func NewUnixNoShutdown(l *stdnet.UnixListener) stdnet.Listener {
 	return &unixListener{l}
 }

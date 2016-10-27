@@ -35,7 +35,7 @@ func NewTCPListener(net, laddr string) (stdnet.Listener, error) {
 
 // NewTCPListenerNoShutdown returns an instance of a net.Listener that
 // is pre-wired with kms, but no shutdown signals allowing for a custom
-// shutdown to be implimented by the caller.
+// shutdown to be implemented by the caller.
 func NewTCPListenerNoShutdown(net, laddr string) (stdnet.Listener, error) {
 
 	tcpAddr, err := stdnet.ResolveTCPAddr(net, laddr)
@@ -53,7 +53,7 @@ func NewTCPListenerNoShutdown(net, laddr string) (stdnet.Listener, error) {
 
 // NewTCPNoShutdown returns an instance of a net.Listener that
 // is pre-wired with kms, but no shutdown signals allowing for a custom
-// shutdown to be implimented by the caller.
+// shutdown to be implemented by the caller.
 func NewTCPNoShutdown(l *stdnet.TCPListener) stdnet.Listener {
 	return &tcpListener{l}
 }
@@ -73,7 +73,7 @@ func (l *tcpListener) Accept() (stdnet.Conn, error) {
 
 	conn.SetKeepAlive(true)                  // see http.tcpKeepAliveListener
 	conn.SetKeepAlivePeriod(time.Minute * 3) // see http.tcpKeepAliveListener
-	// conn.SetLinger(0) // is the default already accoring to the docs https://golang.org/pkg/net/#TCPConn.SetLinger
+	// conn.SetLinger(0) // is the default already according to the docs https://golang.org/pkg/net/#TCPConn.SetLinger
 
 	kms.Wait()
 

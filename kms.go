@@ -57,9 +57,9 @@ func AllowSignalHardShutdown(allow bool) {
 }
 
 // ShutdownInitiated returns a notification channel for the package which will be
-// closed/notified once a termination signal is recieved.
+// closed/notified once a termination signal is received.
 //
-// usefull when other code, such as a custom TCP connection listener needs to be
+// useful when other code, such as a custom TCP connection listener needs to be
 // notified to stop listening for new connections.
 func ShutdownInitiated() <-chan struct{} {
 	return notify.Load().(chan struct{})
@@ -92,7 +92,7 @@ func (k *killingMeSoftly) Done() {
 	k.wg.Done()
 }
 
-// Listen sets up signals to listen for interupt or kill signals
+// Listen sets up signals to listen for interrupt or kill signals
 // in an attempt to wait for all operations to complete before letting
 // the process die.
 func Listen(block bool) {
@@ -112,13 +112,13 @@ func Listen(block bool) {
 
 		close(notify)
 
-		log.Printf("signal %s recieved, attempting soft shutdown...\n", sig)
+		log.Printf("signal %s received, attempting soft shutdown...\n", sig)
 
 		if hardShutdown.Load().(bool) {
 			// listen for another signal, if another happens.. force shutdown
 			go func() {
 				sig := <-s
-				fmt.Printf("recieved additional %s, hard shutdown initiated\n", sig)
+				fmt.Printf("received additional %s, hard shutdown initiated\n", sig)
 				exit(1)
 			}()
 		}
@@ -133,7 +133,7 @@ func Listen(block bool) {
 	}
 }
 
-// ListenTimeout sets up signals to listen for interupt or kill signals
+// ListenTimeout sets up signals to listen for interrupt or kill signals
 // in an attempt to wait for all operations to complete before letting
 // the process die.
 //
@@ -153,7 +153,7 @@ func ListenTimeout(block bool, wait time.Duration) {
 
 		close(notify)
 
-		log.Printf("signal %s recieved, attempting soft shutdown for %s...\n", sig, wait)
+		log.Printf("signal %s received, attempting soft shutdown for %s...\n", sig, wait)
 
 		if hardShutdown.Load().(bool) {
 			go func() {
@@ -163,7 +163,7 @@ func ListenTimeout(block bool, wait time.Duration) {
 					fmt.Println("timeout reached, hard shutdown initiated")
 					exit(1)
 				case sig := <-s:
-					fmt.Printf("recieved additional %s, hard shutdown initiated\n", sig)
+					fmt.Printf("received additional %s, hard shutdown initiated\n", sig)
 					exit(1)
 				case <-done:
 				}

@@ -197,7 +197,7 @@ func (s *serverConnState) handleConnState() {
 
 	// we do not listen for hijacked, they are a lost cause at this level
 	// as we don't know how they are being used, however, you the user can use
-	// the kms package to Wait() and Notify() and Done() within your implimentation;
+	// the kms package to Wait() and Notify() and Done() within your implementation;
 	// this is the power of the kms package, being able to tie multiple disparate
 	//  things together
 	s.ConnState = func(conn net.Conn, state http.ConnState) {
