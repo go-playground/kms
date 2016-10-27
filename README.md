@@ -51,7 +51,7 @@ Installation
 Use go get 
 
 ```shell
-go get -u github.com/go-playground/pure
+go get -u github.com/go-playground/kms
 ```
 
 Built In
