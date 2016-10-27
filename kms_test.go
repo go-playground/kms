@@ -237,6 +237,48 @@ func TestListenTimeoutDone(t *testing.T) {
 	}
 }
 
+func TestListenTimeoutDoneNoHardShutdown(t *testing.T) {
+
+	reinitialize()
+	AllowSignalHardShutdown(false)
+
+	exitFunc.Store(func(code int) {
+		fmt.Println("Exiting OK")
+		close(done.Load().(chan struct{}))
+	})
+
+	m := sync.Mutex{}
+
+	var stopping, stopped bool
+
+	go func() {
+		<-ShutdownInitiated()
+		m.Lock()
+		defer m.Unlock()
+		stopping = true
+		<-ShutdownComplete()
+		stopped = true
+	}()
+
+	go func() {
+		<-time.After(time.Second * 1)
+		syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
+	}()
+
+	ListenTimeout(true, time.Second*10)
+
+	m.Lock()
+	defer m.Unlock()
+
+	if !stopping {
+		t.Errorf("Expected '%t' Got '%t'", true, stopping)
+	}
+
+	if !stopped {
+		t.Errorf("Expected '%t' Got '%t'", true, stopped)
+	}
+}
+
 func TestListenTimeoutDoubleKill(t *testing.T) {
 
 	reinitialize()
