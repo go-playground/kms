@@ -242,10 +242,6 @@ func TestListenTimeoutDoneNoHardShutdown(t *testing.T) {
 	reinitialize()
 	AllowSignalHardShutdown(false)
 
-	exitFunc.Store(func(code int) {
-		fmt.Println("Exiting OK")
-	})
-
 	m := sync.Mutex{}
 
 	var stopping, stopped bool
@@ -262,6 +258,8 @@ func TestListenTimeoutDoneNoHardShutdown(t *testing.T) {
 	go func() {
 		<-time.After(time.Second * 1)
 		syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
+		<-time.After(time.Second * 1)
+		close(done.Load().(chan struct{}))
 	}()
 
 	ListenTimeout(true, time.Second*10)
