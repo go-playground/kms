@@ -1,6 +1,9 @@
 ##KMS
 
 ![Project status](https://img.shields.io/badge/version-1.0.0-green.svg)
+[![Build Status](https://semaphoreci.com/api/v1/joeybloggs/kms/branches/master/badge.svg)](https://semaphoreci.com/joeybloggs/kms)
+[![Coverage Status](https://coveralls.io/repos/github/go-playground/kms/badge.svg)](https://coveralls.io/github/go-playground/kms)
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-playground/kms)](https://goreportcard.com/report/github.com/go-playground/kms)
 [![GoDoc](https://godoc.org/github.com/go-playground/kms?status.svg)](https://godoc.org/github.com/go-playground/kms)
 ![License](https://img.shields.io/dub/l/vibe-d.svg)
 
