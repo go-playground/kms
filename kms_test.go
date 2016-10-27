@@ -278,6 +278,9 @@ func TestListenTimeoutDoneNoHardShutdown(t *testing.T) {
 
 func TestListenTimeoutDoubleKill(t *testing.T) {
 
+	// not keeping track of shutdown variables as there is
+	// no guarantee stopping or stopped would get set, it is a hard shutdown
+
 	reinitialize()
 
 	exitFunc.Store(func(code int) {
@@ -285,17 +288,9 @@ func TestListenTimeoutDoubleKill(t *testing.T) {
 		close(done.Load().(chan struct{}))
 	})
 
-	m := sync.Mutex{}
-
-	var stopping, stopped bool
-
 	go func() {
 		<-ShutdownInitiated()
-		m.Lock()
-		defer m.Unlock()
-		stopping = true
 		<-ShutdownComplete()
-		stopped = true
 	}()
 
 	Wait()
@@ -307,16 +302,4 @@ func TestListenTimeoutDoubleKill(t *testing.T) {
 	}()
 
 	ListenTimeout(true, time.Second*10)
-
-	m.Lock()
-	defer m.Unlock()
-
-	if !stopping {
-		t.Errorf("Expected '%t' Got '%t'", true, stopping)
-	}
-
-	// no guarantee stopped will or will not get set, it is a hard shutdown
-	// if !stopped {
-	// 	t.Errorf("Expected '%t' Got '%t'", true, stopped)
-	// }
 }
