@@ -26,7 +26,7 @@ import (
 func reinitialize() {
 	notify.Store(make(chan struct{}))
 	done.Store(make(chan struct{}))
-	hardShutdown.Store(true)
+	AllowSignalHardShutdown(true)
 
 	exitFunc.Store(func(code int) {
 		fmt.Println("Exiting")
@@ -49,9 +49,9 @@ func TestListen(t *testing.T) {
 	Wait()
 
 	go func() {
-		<-ShutdownInitiated()
 		m.Lock()
 		defer m.Unlock()
+		<-ShutdownInitiated()
 		stopping = true
 		<-ShutdownComplete()
 		stopped = true
@@ -86,9 +86,9 @@ func TestListen2(t *testing.T) {
 	var stopping, stopped bool
 
 	go func() {
-		<-ShutdownInitiated()
 		m.Lock()
 		defer m.Unlock()
+		<-ShutdownInitiated()
 		stopping = true
 		<-ShutdownComplete()
 		stopped = true
@@ -123,9 +123,9 @@ func TestListenTimeout(t *testing.T) {
 	var stopping, stopped bool
 
 	go func() {
-		<-ShutdownInitiated()
 		m.Lock()
 		defer m.Unlock()
+		<-ShutdownInitiated()
 		stopping = true
 		<-ShutdownComplete()
 		stopped = true
@@ -166,9 +166,9 @@ func TestListenTimeoutTimeout(t *testing.T) {
 	var stopping, stopped bool
 
 	go func() {
-		<-ShutdownInitiated()
 		m.Lock()
 		defer m.Unlock()
+		<-ShutdownInitiated()
 		stopping = true
 		<-ShutdownComplete()
 		stopped = true
@@ -209,9 +209,9 @@ func TestListenTimeoutDone(t *testing.T) {
 	var stopping, stopped bool
 
 	go func() {
-		<-ShutdownInitiated()
 		m.Lock()
 		defer m.Unlock()
+		<-ShutdownInitiated()
 		stopping = true
 		<-ShutdownComplete()
 		stopped = true
@@ -246,9 +246,9 @@ func TestListenTimeoutDoneNoHardShutdown(t *testing.T) {
 	var stopping, stopped bool
 
 	go func() {
-		<-ShutdownInitiated()
 		m.Lock()
 		defer m.Unlock()
+		<-ShutdownInitiated()
 		stopping = true
 		<-ShutdownComplete()
 		stopped = true
