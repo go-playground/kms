@@ -26,8 +26,7 @@ import (
 func reinitialize() {
 	notify.Store(make(chan struct{}))
 	done.Store(make(chan struct{}))
-
-	AllowSignalHardShutdown(true)
+	hardShutdown.Store(true)
 
 	exitFunc.Store(func(code int) {
 		fmt.Println("Exiting")
