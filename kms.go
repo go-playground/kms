@@ -20,6 +20,11 @@ type killingMeSoftly struct {
 	wg *sync.WaitGroup
 }
 
+// SignalFn is the function type used to signal kms of a shutdown siganl.
+// by default this library listens for syscall.SIGINT, syscall.SIGTERMand syscall.SIGHUP
+// os.Signal's but you can override with whatever signals or logic you wish.
+type SignalFn func() <-chan os.Signal
+
 // Logger is the default instance of the log package
 var (
 	once         sync.Once
@@ -30,6 +35,7 @@ var (
 	done         atomic.Value // chan struct{}
 	exitFunc     atomic.Value // os.Exit aka func(int)
 	hardShutdown atomic.Value // bool
+	sigFn        atomic.Value // SignalFn
 )
 
 func init() {
@@ -41,7 +47,23 @@ func init() {
 		notify.Store(make(chan struct{}))
 		done.Store(make(chan struct{}))
 		exitFunc.Store(os.Exit)
-		hardShutdown.Store(true)
+
+		AllowSignalHardShutdown(true)
+
+		signalFn := func() <-chan os.Signal {
+			s := make(chan os.Signal, 1)
+			signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+
+			go func() {
+				<-ShutdownComplete()
+				signal.Stop(s)
+				close(s)
+			}()
+
+			return s
+		}
+
+		SetSignalFn(signalFn)
 	})
 }
 
@@ -54,6 +76,14 @@ func init() {
 // Default: true
 func AllowSignalHardShutdown(allow bool) {
 	hardShutdown.Store(allow)
+}
+
+// SetSignalFn allows registering of a custom signal function
+// if you wish to listen for different signals, or even your own custom
+// logic not related to signals. By default this function listens for
+// syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP
+func SetSignalFn(fn SignalFn) {
+	sigFn.Store(fn)
 }
 
 // ShutdownInitiated returns a notification channel for the package which will be
@@ -97,16 +127,12 @@ func (k *killingMeSoftly) Done() {
 // the process die.
 func Listen(block bool) {
 
-	s := make(chan os.Signal, 1)
-	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	s := sigFn.Load().(SignalFn)()
 	done := done.Load().(chan struct{})
 	notify := notify.Load().(chan struct{})
 	exit := exitFunc.Load().(func(int))
 
 	go func() {
-
-		defer close(s)
-		defer signal.Stop(s)
 
 		sig := <-s
 
@@ -140,15 +166,12 @@ func Listen(block bool) {
 // the wait duration is how long to wait before forcefully shutting everything down.
 func ListenTimeout(block bool, wait time.Duration) {
 
-	s := make(chan os.Signal, 1)
-	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	s := sigFn.Load().(SignalFn)()
 	done := done.Load().(chan struct{})
 	notify := notify.Load().(chan struct{})
 	exit := exitFunc.Load().(func(int))
 
 	go func() {
-		defer close(s)
-		defer signal.Stop(s)
 		sig := <-s
 
 		close(notify)
