@@ -1,5 +1,5 @@
 /*
-Pacakge kms (Killing Me Softly) is a library that aids in graceful shutdown of a process/application.
+Package kms (Killing Me Softly) is a library that aids in graceful shutdown of a process/application.
 
 Example:
 	package main
