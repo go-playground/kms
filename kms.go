@@ -2,7 +2,6 @@ package kms
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -21,7 +20,7 @@ type killingMeSoftly struct {
 }
 
 // SignalFn is the function type used to signal kms of a shutdown siganl.
-// by default this library listens for syscall.SIGINT, syscall.SIGTERMand syscall.SIGHUP
+// by default this library listens for syscall.SIGINT, syscall.SIGTERM and syscall.SIGHUP
 // os.Signal's but you can override with whatever signals or logic you wish.
 type SignalFn func() <-chan os.Signal
 
@@ -138,19 +137,19 @@ func Listen(block bool) {
 
 		close(notify)
 
-		log.Printf("signal %s received, attempting soft shutdown...\n", sig)
+		fmt.Printf("Gracefully stopping (signal: %s)... ", sig)
 
 		if hardShutdown.Load().(bool) {
 			// listen for another signal, if another happens.. force shutdown
 			go func() {
-				sig := <-s
-				fmt.Printf("received additional %s, hard shutdown initiated\n", sig)
+				<-s
+				fmt.Println("done")
 				exit(1)
 			}()
 		}
 
 		killMeSoftly.wg.Wait()
-		log.Println("soft shutdown complete, ending process")
+		fmt.Println("done")
 		close(done)
 	}()
 
@@ -176,17 +175,17 @@ func ListenTimeout(block bool, wait time.Duration) {
 
 		close(notify)
 
-		log.Printf("signal %s received, attempting soft shutdown for %s...\n", sig, wait)
+		fmt.Printf("Gracefully stopping (signal: %s, timeout: %s)... ", sig, wait)
 
 		if hardShutdown.Load().(bool) {
 			go func() {
 				select {
 
 				case <-time.After(wait):
-					fmt.Println("timeout reached, hard shutdown initiated")
+					fmt.Println("timed out")
 					exit(1)
-				case sig := <-s:
-					fmt.Printf("received additional %s, hard shutdown initiated\n", sig)
+				case <-s:
+					fmt.Println("done")
 					exit(1)
 				case <-done:
 				}
@@ -197,7 +196,7 @@ func ListenTimeout(block bool, wait time.Duration) {
 				select {
 
 				case <-time.After(wait):
-					fmt.Println("timeout reached, hard shutdown initiated")
+					fmt.Println("timed out")
 					exit(1)
 				case <-done:
 				}
@@ -206,7 +205,7 @@ func ListenTimeout(block bool, wait time.Duration) {
 		}
 
 		killMeSoftly.wg.Wait()
-		log.Println("soft shutdown complete, ending process")
+		fmt.Println("done")
 		close(done)
 	}()
 
